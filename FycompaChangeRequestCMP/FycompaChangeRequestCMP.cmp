@@ -1,0 +1,164 @@
+<aura:component controller="FycompaChangeRequestController" access="global" Implements="flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickActionWithoutHeader">
+    <aura:attribute name="recordId" type="Id"/>
+    
+    <aura:attribute name="accountRecord" type="Object" />
+    
+    <aura:attribute name="showContainerLoading" type="Boolean" default="true"/>
+    <aura:attribute name="openChangeRequest" type="Boolean" default="true"/>
+    <aura:attribute name="showTarget" type="Boolean" default="false"/>
+    <aura:attribute name="showSpecialty" type="Boolean" default="false"/>
+    <aura:attribute name="showEPAddress" type="Boolean" default="false"/>
+    <aura:attribute name="showSamplingTarget" type="Boolean" default="false"/>
+    
+    <aura:attribute name="selectedRecordType" type="String"/>
+    <aura:attribute name="proposedTargetOpts" type="List"/>
+    <aura:attribute name="proposedSpecialtyOpts" type="List"/>
+    <aura:attribute name="proposedSubSpecialtyOpts" type="List"/>
+    <aura:attribute name="reasonValue" type="String"/>
+    <aura:attribute name="proposedTarget" type="String" />
+    <aura:attribute name="proposedSpecialty" type="String" />
+    <aura:attribute name="proposedSubSpecialty" type="String" />
+    <aura:attribute name="areComboboxesValid" type="Boolean" default="false" />
+    
+    <aura:attribute name="recordTypeOptions" type="Map"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInIt}"/>
+    
+    <aura:html tag="style">
+        .cuf-content {
+        padding: 0 0rem !important;
+        }
+        .slds-p-around--medium {
+        padding: 0rem !important;
+        }       
+        .slds-modal__content{
+        overflow-y:hidden !important;
+        height:unset !important;
+        max-height:unset !important;
+        }
+        .slds-modal__container{
+        width: 40% !important;
+        max-width: 40% !important;
+        }
+    </aura:html>
+    
+    <!-- START HEADER -->
+    <div class="modal-header slds-modal__header slds-size_1-of-1 headerContainer">
+        <h4 class="title slds-text-heading--medium">Change Request</h4>
+    </div>
+    <!-- END HEADER -->
+    
+    <lightning:recordEditForm aura:id="recordEditForm" recordId="" objectApiName="Change_Request__c"  recordTypeId="{!v.selectedRecordType}"
+                              onsubmit="{!c.handleSubmit}" onsuccess="{!c.handleSuccess}" onerror="{!c.handleError}">
+        <div class="slds-modal__content slds-is-relative">
+            <aura:if isTrue="{!v.showContainerLoading}">
+                <lightning:spinner alternativeText="Loading" size="large" />
+            </aura:if>
+            
+            <div class="slds-grid slds-gutters slds-wrap slds-card slds-p-around_small">
+                <aura:if isTrue="{!v.openChangeRequest}">    
+                    <div class="slds-col slds-size_1-of-1 slds-p-around_small">
+                        <lightning:select label="Change Request Type" value="{!v.selectedRecordType}" required="true">
+                            <aura:iteration items="{!v.recordTypeOptions}" var="ind" indexVar="key">
+                                <option text="{!ind.value}" value="{!ind.key}" selected="{!ind.key==v.selectedRecordType}" />
+                            </aura:iteration>
+                        </lightning:select>
+                    </div>
+                </aura:if>
+                <div class="slds-col slds-size_1-of-1 slds-hide">
+                    <lightning:inputField fieldName="HCP__c" value="{!v.recordId}"></lightning:inputField>
+                </div>
+                <aura:if isTrue="{!v.showTarget}"> 
+                    <div class="slds-col slds-size_1-of-2">
+                        <lightning:input disabled="true" value="{!v.accountRecord.Fycompa_Target__c}" label="Current Target Status" />
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-hide">
+                        <lightning:inputField fieldName="Proposed_Fycompa_Target__c" value="{!v.proposedTarget}" variant="label-stacked" required="true"/>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2">
+                        <lightning:combobox 
+                            aura:id="proposedTargetStatus" 
+                            label="Proposed Target Status" 
+                            value="{!v.proposedTarget}" 
+                            placeholder="Select Status" 
+                            options="{!v.proposedTargetOpts}"
+                            required="true"/>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2">
+                    </div>
+                    <div class="slds-col slds-size_1-of-1">
+                        <lightning:textarea name="input2" label="Why do you want to make these changes?" value="{!v.reasonValue}" required="true"/>
+                    </div>
+                </aura:if>
+                <aura:if isTrue="{!v.showSpecialty}">    
+                    <div class="slds-col slds-size_1-of-2">
+                        <lightning:input disabled="true" value="{!v.accountRecord.Specialty__c}" label="Current Specialty" />
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-hide">
+                        <lightning:inputField fieldName="Proposed_Specialty__c" value="{!v.proposedSpecialty}" variant="label-stacked" required="true"/>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2">
+                        <lightning:combobox 
+                            aura:id="proposedSpecialty" 
+                            label="Proposed Specialty" 
+                            value="{!v.proposedSpecialty}" 
+                            placeholder="Select Specialty" 
+                            options="{!v.proposedSpecialtyOpts}"
+                            required="true"/>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2">
+                        <lightning:input disabled="true" value="{!v.accountRecord.Sub_Specialty__c}" label="Current Subspecialty" />
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-hide">
+                        <lightning:inputField fieldName="Proposed_Sub_Specialty__c" value="{!v.proposedSubSpecialty}" variant="label-stacked" required="true"/>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2">
+                        <lightning:combobox 
+                            aura:id="proposedSubSpecialty" 
+                            label="Proposed Subspecialty" 
+                            value="{!v.proposedSubSpecialty}" 
+                            placeholder="Select Subspecialty" 
+                            options="{!v.proposedSubSpecialtyOpts}"
+                            required="true"/>
+                    </div>
+
+                    <!-- <div class="slds-col slds-size_1-of-1">
+                        <lightning:textarea name="input2" label="Please provide justification for requesting to make this provider sample eligible:" value="{!v.reasonValue}" required="true"/>
+                    </div> -->
+
+                </aura:if>
+                <aura:if isTrue="{!v.showEPAddress}">
+                    <div class="slds-col slds-size_1-of-1">
+                        <DV_Flow_AP:AddressValidation showMap="false" aura:id="addressValId" country="United States"/>
+                    </div>
+                     <div class="slds-col slds-size_1-of-1 slds-var-m-top_small">
+                        <lightning:textarea aura:id="addresschangereason" name="input2" label="Why do you want to make these changes?" value="{!v.reasonValue}" required="true"/>
+                    </div> 
+                </aura:if>
+                <aura:if isTrue="{!v.showSamplingTarget}"> 
+                    <!--<div class="slds-col slds-size_1-of-2">
+                        <lightning:select label="Current Sample Eligibility Status" value="Non-Sample Eligible" disabled="true">
+                            <option text="Non-Sample Eligible" value="Non-Sample Eligible" selected="true" />
+                        </lightning:select>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2">
+                        <lightning:inputField fieldName="Proposed_Sample_Eligibility_Status__c" required="true"/>
+                    </div>-->
+                    <div class="slds-col slds-size_1-of-1">
+                        <lightning:textarea name="input2" label="Please provide justification for requesting to make this provider sample eligible:" value="{!v.reasonValue}" required="true"/>
+                    </div>
+                </aura:if>
+            </div>
+        </div>
+        <div class="modal-footer slds-modal__footer slds-size_1-of-1">
+            <aura:if isTrue="{!v.openChangeRequest}">    
+                <ui:button class="slds-button slds-button--brand" label="Next" press="{!c.handleNext}"/>
+                <aura:set attribute="else">
+                    <lightning:button aura:id="submit" type="submit" label="Submit" variant="brand" onclick="{!c.handleValidate}"/>
+                    <ui:button class="slds-button slds-button_outline-brand" label="Previous" press="{!c.handleBack}"/>
+                </aura:set>
+            </aura:if>
+            <ui:button class="slds-button" label="Cancel" press="{!c.handleCancel}"/>
+        </div>
+    </lightning:recordEditForm>
+</aura:component>
